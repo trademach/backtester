@@ -1,0 +1,9 @@
+{
+  "name": "backtester",
+  "version": "0.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "config": "^1.21.0",
+    "zmq": "^2.15.3"
+  }
+}
