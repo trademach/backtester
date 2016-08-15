@@ -35,6 +35,8 @@ function handleMessage(topic, data) {
 }
 
 function updateRecord(message, isSettlement) {
+  const strategy = message.strategy;
+  const instrument = message.instrument;
   const newAsk = message.ask;
   const newBid = message.bid;
   const newPosition = message.position;
@@ -43,6 +45,8 @@ function updateRecord(message, isSettlement) {
   totalSpread += newAsk - newBid;
 
   if(newPosition !== lastPosition) {
+    console.log(`order received: ${strategy} / ${instrument}`);
+
     if(lastPosition) {
       const lastUnitProfit = lastPosition >= 0 ?
         (newBid - lastAsk) :
@@ -50,14 +54,13 @@ function updateRecord(message, isSettlement) {
 
       unitProfit += lastUnitProfit;
 
-      const lastTradeProfit = lastPosition * lastUnitProfit;
+      const lastTradeProfit = Math.abs(lastPosition) * lastUnitProfit;
       profit += lastTradeProfit;
     }
 
     lastAsk = newAsk;
     lastBid = newBid;
   }
-
 
   const action = message.action;
   if(action === 'match') {
@@ -70,8 +73,8 @@ function updateRecord(message, isSettlement) {
   if(timer) clearTimeout(timer);
   timer = setTimeout(() => {
     const settlementMessage = {
-      strategy: message.strategy,
-      instrument: message.instrument,
+      strategy: strategy,
+      instrument: instrument,
       action: 'match',
       position: 0,
       ask: newAsk,
@@ -81,19 +84,23 @@ function updateRecord(message, isSettlement) {
     updateRecord(settlementMessage, true);
     logResult(message);
     resetRecord();
-  }, 1000);
+  }, config.get('backtest.resultDelay') * 1000);
 }
 
 function logResult(message) {
   const strategy = message.strategy;
   const instrument = message.instrument;
 
+  const avgProfit = profit / tradeCount;
+  const avgUnitProfit = unitProfit / tradeCount;
+  const avgSpread = totalSpread / tickCount;
+
   console.log(`result: ${strategy} / ${instrument}`);
-  console.log(`total profit = ${profit}`);
+  console.log(`total profit = ${Math.floor(profit * 1000) / 1000}`);
   console.log(`number of trades = ${tradeCount}`);
-  console.log(`profit per trade = ${profit / tradeCount}`);
-  console.log(`unit profit per trade = ${unitProfit / tradeCount}`);
-  console.log(`average spread = ${totalSpread / tradeCount}`);
+  console.log(`profit per trade = ${Math.floor(avgProfit * 1000) / 1000}`);
+  console.log(`unit profit per trade = ${Math.floor(avgUnitProfit * 10000 * 1000) / 1000} PIPS`);
+  console.log(`average spread = ${Math.floor(avgSpread * 10000 * 1000) / 1000} PIPS`);
 }
 
 function resetRecord() {

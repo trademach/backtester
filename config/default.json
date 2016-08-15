@@ -2,5 +2,8 @@
   "mq": {
     "uri": "tcp://127.0.0.1:8803",
     "topic": "backtester"
+  },
+  "backtest": {
+    "resultDelay": 10
   }
 }
