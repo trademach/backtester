@@ -66,6 +66,17 @@ function updateRecord(message, isSettlement) {
   if(action === 'match') {
     if(newPosition !== 0 && lastPosition !== newPosition) tradeCount++;
     lastPosition = message.position;
+
+  } else if(action === 'close') {
+    lastPosition = 0;
+
+  } else if(action === 'buy') {
+    lastPosition = message.size;
+    tradeCount++;
+
+  } else if(action === 'sell') {
+    lastPosition = message.size;
+    tradeCount++;
   }
 
   if(isSettlement) return;
